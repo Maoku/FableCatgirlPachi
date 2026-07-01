@@ -13,3 +13,7 @@ Docs/pachi.png は Docs/character.png のキャラクターをテーマにした
 - typescript
 - WebGL
 - 物理エンジン
+
+# バージョン管理
+
+git による管理。機能やフェーズごとに commit をして欲しい
