@@ -1,0 +1,57 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: #16070f;
+  color: #f5dce8;
+  font-family: 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;
+}
+
+#app {
+  display: flex;
+  height: 100vh;
+  gap: 12px;
+  padding: 12px;
+}
+
+#board-wrap {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-width: 0;
+}
+
+#board canvas {
+  max-height: calc(100vh - 24px);
+  max-width: 100%;
+  height: auto !important;
+  width: auto !important;
+  border-radius: 12px;
+  box-shadow: 0 0 40px rgba(255, 95, 162, 0.25);
+}
+
+#panel {
+  width: 300px;
+  flex-shrink: 0;
+  overflow-y: auto;
+  background: #24101c;
+  border: 1px solid #4a2038;
+  border-radius: 12px;
+  padding: 14px;
+}
+
+#panel h1 {
+  font-size: 18px;
+  margin: 0 0 10px;
+  color: #ff5fa2;
+}
+
+.hint {
+  font-size: 12px;
+  color: #b58aa2;
+}
