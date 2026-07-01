@@ -6,6 +6,7 @@ import { BoardRenderer } from './core/BoardRenderer';
 import { Hud } from './ui/Hud';
 import { EditorMode } from './editor/EditorMode';
 import { LayoutStore } from './editor/LayoutStore';
+import { EffectsLayer } from './fx/EffectsLayer';
 import { BOARD_W, BOARD_H, BALL_R } from './core/constants';
 
 function createBallTexture(app: Application): Texture {
@@ -39,22 +40,25 @@ async function boot(): Promise<void> {
   bg.height = BOARD_H;
   app.stage.addChild(bg);
 
-  // レイヤ構成: 背景 → オーバーレイ(釘等) → 玉
+  // レイヤ構成: 背景 → オーバーレイ(釘等) → 玉 → 演出
   const boardRenderer = new BoardRenderer();
   app.stage.addChild(boardRenderer.container);
   const ballLayer = new Container();
   app.stage.addChild(ballLayer);
+  const fx = new EffectsLayer();
+  app.stage.addChild(fx.container);
 
   const store = new LayoutStore();
   const layoutRef: LayoutRef = { current: store.load() };
-  const game = new Game(layoutRef, ballLayer, createBallTexture(app));
+  const game = new Game(layoutRef, ballLayer, createBallTexture(app), fx);
 
   const redraw = () =>
     boardRenderer.redraw(layoutRef.current, {
       editMode: game.mode === 'edit',
       selectedId: editor.selected?.id ?? null,
-      attackerOpen: false,
+      attackerOpen: game.attackerOpen,
     });
+  game.onVisualChange = () => redraw();
 
   // エディタ。変更のたびに保存(debounce)と再描画を行う
   let saveTimer: ReturnType<typeof setTimeout> | undefined;

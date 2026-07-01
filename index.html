@@ -23,9 +23,15 @@
             <input type="range" id="power" min="0" max="100" value="62" />
           </label>
           <button id="fire-btn" class="big-btn">🚀 玉を打つ(長押し / Space)</button>
+          <div class="pending-row">
+            保留 <span id="pending-dots" class="pending-dots">○○○○</span>
+            <span id="bonus-status" class="bonus-status"></span>
+          </div>
           <div class="stats">
             <div>発射数 <span id="stat-launched">0</span></div>
             <div>スタート入賞 <span id="stat-starts">0</span></div>
+            <div>大当り <span id="stat-wins">0</span></div>
+            <div>差玉 <span id="stat-diff">0</span></div>
           </div>
         </section>
 

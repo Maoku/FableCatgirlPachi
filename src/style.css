@@ -142,6 +142,25 @@ button.small {
   display: none !important;
 }
 
+.pending-row {
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pending-dots {
+  color: #ff5fa2;
+  letter-spacing: 3px;
+  font-size: 15px;
+}
+
+.bonus-status {
+  color: #ffd166;
+  font-weight: bold;
+  font-size: 13px;
+}
+
 .big-btn.secondary {
   background: #2a3a5c;
   border-color: #5f8cff;

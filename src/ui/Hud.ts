@@ -32,6 +32,10 @@ export class Hud {
   private stockEl = el<HTMLSpanElement>('stock');
   private launchedEl = el<HTMLSpanElement>('stat-launched');
   private startsEl = el<HTMLSpanElement>('stat-starts');
+  private winsEl = el<HTMLSpanElement>('stat-wins');
+  private diffEl = el<HTMLSpanElement>('stat-diff');
+  private pendingEl = el<HTMLSpanElement>('pending-dots');
+  private bonusEl = el<HTMLSpanElement>('bonus-status');
   private modeBtn = el<HTMLButtonElement>('mode-btn');
   private editPanel = el<HTMLElement>('edit-panel');
   private playPanel = el<HTMLElement>('play-panel');
@@ -187,8 +191,16 @@ export class Hud {
   }
 
   refresh(): void {
+    const { stats } = this.game;
     this.stockEl.textContent = String(this.game.ballStock);
-    this.launchedEl.textContent = String(this.game.stats.launched);
-    this.startsEl.textContent = String(this.game.stats.starts);
+    this.launchedEl.textContent = String(stats.launched);
+    this.startsEl.textContent = String(stats.starts);
+    this.winsEl.textContent = String(stats.wins);
+    const diff = stats.payout - stats.launched;
+    this.diffEl.textContent = (diff > 0 ? '+' : '') + diff;
+    this.pendingEl.textContent =
+      '●'.repeat(this.game.pending) + '○'.repeat(Math.max(0, 4 - this.game.pending));
+    const b = this.game.bonus;
+    this.bonusEl.textContent = b ? `🎉 大当り中 R${b.round}/10` : '';
   }
 }
