@@ -7,6 +7,7 @@ import { Hud } from './ui/Hud';
 import { EditorMode } from './editor/EditorMode';
 import { LayoutStore } from './editor/LayoutStore';
 import { EffectsLayer } from './fx/EffectsLayer';
+import { AutoPlayer } from './game/AutoPlayer';
 import { BOARD_W, BOARD_H, BALL_R } from './core/constants';
 
 function createBallTexture(app: Application): Texture {
@@ -51,6 +52,7 @@ async function boot(): Promise<void> {
   const store = new LayoutStore();
   const layoutRef: LayoutRef = { current: store.load() };
   const game = new Game(layoutRef, ballLayer, createBallTexture(app), fx);
+  const auto = new AutoPlayer(game);
 
   const redraw = () =>
     boardRenderer.redraw(layoutRef.current, {
@@ -71,6 +73,7 @@ async function boot(): Promise<void> {
   editor.attach(app.stage);
 
   const setMode = (mode: GameMode) => {
+    if (mode === 'edit') auto.stop('エディットモードへ切替');
     game.setMode(mode);
     editor.active = mode === 'edit';
     if (mode === 'play') store.save(layoutRef.current);
@@ -96,10 +99,11 @@ async function boot(): Promise<void> {
     redraw();
   };
 
-  const hud = new Hud({ game, editor, store, layoutRef, setMode, replaceLayout });
+  const hud = new Hud({ game, auto, editor, store, layoutRef, setMode, replaceLayout });
   redraw();
 
   app.ticker.add((ticker) => {
+    auto.update(ticker.deltaMS);
     game.update(ticker.deltaMS);
     if (game.mode === 'play') boardRenderer.updateWindmills(game.physics);
   });
@@ -108,6 +112,7 @@ async function boot(): Promise<void> {
   (window as unknown as Record<string, unknown>).__fcp = {
     app,
     game,
+    auto,
     layoutRef,
     redraw,
     editor,

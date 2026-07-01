@@ -1,4 +1,5 @@
 import type { Game, GameMode, LayoutRef } from '../core/Game';
+import type { AutoPlayer } from '../game/AutoPlayer';
 import type { EditorMode, EditorTool } from '../editor/EditorMode';
 import type { LayoutStore } from '../editor/LayoutStore';
 import type { LayoutObject } from '../types';
@@ -11,6 +12,7 @@ function el<T extends HTMLElement>(id: string): T {
 
 export interface HudContext {
   game: Game;
+  auto: AutoPlayer;
   editor: EditorMode;
   store: LayoutStore;
   layoutRef: LayoutRef;
@@ -43,12 +45,34 @@ export class Hud {
 
   constructor(private ctx: HudContext) {
     this.wirePlayControls();
+    this.wireAutoPlay();
     this.wireModeToggle();
     this.wireEditorTools();
     this.wireProps();
     this.wireFileOps();
     setInterval(() => this.refresh(), 150);
     this.refresh();
+  }
+
+  private wireAutoPlay(): void {
+    const btn = el<HTMLButtonElement>('auto-btn');
+    btn.addEventListener('click', () => {
+      const auto = this.ctx.auto;
+      if (auto.active) {
+        auto.stop();
+        return;
+      }
+      if (this.game.mode !== 'play') return;
+      const useBalls = el<HTMLInputElement>('auto-use-balls').checked;
+      const useTime = el<HTMLInputElement>('auto-use-time').checked;
+      const balls = Number(el<HTMLInputElement>('auto-balls').value);
+      const minutes = Number(el<HTMLInputElement>('auto-minutes').value);
+      auto.start({
+        power: this.game.firePower,
+        ballLimit: useBalls && balls > 0 ? balls : null,
+        timeLimitMin: useTime && minutes > 0 ? minutes : null,
+      });
+    });
   }
 
   private get game(): Game {
@@ -202,5 +226,19 @@ export class Hud {
       '●'.repeat(this.game.pending) + '○'.repeat(Math.max(0, 4 - this.game.pending));
     const b = this.game.bonus;
     this.bonusEl.textContent = b ? `🎉 大当り中 R${b.round}/10` : '';
+
+    const auto = this.ctx.auto;
+    const st = auto.status();
+    const btn = el<HTMLButtonElement>('auto-btn');
+    btn.textContent = st.active ? '■ 自動プレイ停止' : '▶ 自動プレイ開始';
+    btn.classList.toggle('running', st.active);
+    const statusEl = el<HTMLElement>('auto-status');
+    if (st.active) {
+      const m = Math.floor(st.elapsedSec / 60);
+      const s = Math.floor(st.elapsedSec % 60);
+      statusEl.textContent = `実行中: ${st.firedBalls}発 / ${m}分${String(s).padStart(2, '0')}秒`;
+    } else {
+      statusEl.textContent = st.stopReason ?? '停止中';
+    }
   }
 }

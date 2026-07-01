@@ -33,6 +33,20 @@
             <div>大当り <span id="stat-wins">0</span></div>
             <div>差玉 <span id="stat-diff">0</span></div>
           </div>
+
+          <div class="auto-box">
+            <h2>🤖 自動プレイ</h2>
+            <label class="auto-row">
+              <input type="checkbox" id="auto-use-balls" checked />
+              玉数上限 <input type="number" id="auto-balls" value="500" min="1" step="50" />発
+            </label>
+            <label class="auto-row">
+              <input type="checkbox" id="auto-use-time" />
+              時間上限 <input type="number" id="auto-minutes" value="5" min="1" step="1" />分
+            </label>
+            <button id="auto-btn" class="big-btn">▶ 自動プレイ開始</button>
+            <div class="hint" id="auto-status">停止中</div>
+          </div>
         </section>
 
         <section class="panel-section">

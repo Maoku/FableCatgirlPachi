@@ -161,6 +161,43 @@ button.small {
   font-size: 13px;
 }
 
+.auto-box {
+  border: 1px solid #4a2038;
+  border-radius: 8px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: #1c0b16;
+}
+
+.auto-box h2 {
+  margin: 0;
+  font-size: 14px;
+  color: #8ec9ff;
+}
+
+.auto-row {
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.auto-row input[type='number'] {
+  width: 64px;
+  background: #24101c;
+  color: #f5dce8;
+  border: 1px solid #6b2f52;
+  border-radius: 6px;
+  padding: 4px 6px;
+}
+
+#auto-btn.running {
+  background: #b0413e;
+  border-color: #ff9d9a;
+}
+
 .big-btn.secondary {
   background: #2a3a5c;
   border-color: #5f8cff;
