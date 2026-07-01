@@ -1,7 +1,11 @@
 import './style.css';
 import { Application, Assets, Container, Graphics, Rectangle, Sprite, Texture } from 'pixi.js';
-import { initRapier, PhysicsWorld } from './core/PhysicsWorld';
-import { BOARD_W, BOARD_H, BALL_R, BALL_KILL_Y } from './core/constants';
+import { initRapier } from './core/PhysicsWorld';
+import { Game, type LayoutRef } from './core/Game';
+import { BoardRenderer } from './core/BoardRenderer';
+import { Hud } from './ui/Hud';
+import { createDefaultLayout } from './layout/defaultLayout';
+import { BOARD_W, BOARD_H, BALL_R } from './core/constants';
 
 function createBallTexture(app: Application): Texture {
   const g = new Graphics()
@@ -24,6 +28,8 @@ async function boot(): Promise<void> {
     antialias: true,
   });
   document.getElementById('board')!.appendChild(app.canvas);
+  app.stage.eventMode = 'static';
+  app.stage.hitArea = new Rectangle(0, 0, BOARD_W, BOARD_H);
 
   // 背景(パチンコ台の画像)
   const bgTexture = await Assets.load<Texture>('assets/pachi.png');
@@ -32,49 +38,31 @@ async function boot(): Promise<void> {
   bg.height = BOARD_H;
   app.stage.addChild(bg);
 
+  // レイヤ構成: 背景 → オーバーレイ(釘等) → 玉
+  const boardRenderer = new BoardRenderer();
+  app.stage.addChild(boardRenderer.container);
   const ballLayer = new Container();
   app.stage.addChild(ballLayer);
 
-  const physics = new PhysicsWorld();
-  const ballTexture = createBallTexture(app);
-  const ballSprites = new Map<number, Sprite>();
+  const layoutRef: LayoutRef = { current: createDefaultLayout() };
+  const game = new Game(layoutRef, ballLayer, createBallTexture(app));
+  new Hud(game);
 
-  // Phase 0 テスト: クリックした場所に玉を落とす
-  app.stage.eventMode = 'static';
-  app.stage.hitArea = new Rectangle(0, 0, BOARD_W, BOARD_H);
-  app.stage.on('pointerdown', (e) => {
-    physics.spawnBall(e.global.x, e.global.y, 0, 0);
-  });
+  const redraw = () =>
+    boardRenderer.redraw(layoutRef.current, {
+      editMode: game.mode === 'edit',
+      selectedId: null,
+      attackerOpen: false,
+    });
+  redraw();
 
   app.ticker.add((ticker) => {
-    physics.step(ticker.deltaMS);
-
-    // 物理→描画の同期。消えた玉のスプライトも回収する
-    const seen = new Set<number>();
-    const dead: number[] = [];
-    physics.forEachBall((id, x, y) => {
-      if (y > BALL_KILL_Y) {
-        dead.push(id);
-        return;
-      }
-      seen.add(id);
-      let sprite = ballSprites.get(id);
-      if (!sprite) {
-        sprite = new Sprite(ballTexture);
-        sprite.anchor.set(0.5);
-        ballSprites.set(id, sprite);
-        ballLayer.addChild(sprite);
-      }
-      sprite.position.set(x, y);
-    });
-    for (const id of dead) physics.removeBall(id);
-    for (const [id, sprite] of ballSprites) {
-      if (!seen.has(id)) {
-        sprite.destroy();
-        ballSprites.delete(id);
-      }
-    }
+    game.update(ticker.deltaMS);
+    if (game.mode === 'play') boardRenderer.updateWindmills(game.physics);
   });
+
+  // デバッグ・動作検証用
+  (window as unknown as Record<string, unknown>).__fcp = { app, game, layoutRef, redraw };
 }
 
 boot();

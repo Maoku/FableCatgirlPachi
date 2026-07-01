@@ -12,7 +12,22 @@
       </div>
       <aside id="panel">
         <h1>FableCatgirlPachi</h1>
-        <p class="hint">クリックで玉を落とすテストモード(Phase 0)</p>
+
+        <section class="panel-section" id="play-panel">
+          <div class="stock-row">
+            持ち玉 <span id="stock" class="stock-num">500</span>
+            <button id="refill-btn" class="small">+500 補給</button>
+          </div>
+          <label class="slider-label">
+            発射強度 <span id="power-label">62</span>%
+            <input type="range" id="power" min="0" max="100" value="62" />
+          </label>
+          <button id="fire-btn" class="big-btn">🚀 玉を打つ(長押し / Space)</button>
+          <div class="stats">
+            <div>発射数 <span id="stat-launched">0</span></div>
+            <div>スタート入賞 <span id="stat-starts">0</span></div>
+          </div>
+        </section>
       </aside>
     </div>
     <script type="module" src="/src/main.ts"></script>

@@ -33,8 +33,10 @@ export const DISPLAY_POLY: number[][] = [
 // 発射位置(レール溝の下部)と発射方向(溝に沿って右上へ)
 export const LAUNCH_POS = { x: 651, y: 1204 };
 export const LAUNCH_DIR = { x: 0.968, y: -0.251 };
-export const LAUNCH_MIN_V = 9; // m/s
-export const LAUNCH_MAX_V = 17.5;
+// レール溝の摩擦・コーナー衝突による減速を織り込んだ実測ベースの値。
+// 強度 0.45 前後で盤面に届き、1.0 で左端までオーバーシュートする
+export const LAUNCH_MIN_V = 13; // m/s
+export const LAUNCH_MAX_V = 23;
 
 // この y(px)を超えた玉は消滅(フェイルセーフ)
 export const BALL_KILL_Y = 1330;
