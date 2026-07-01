@@ -28,6 +28,53 @@
             <div>スタート入賞 <span id="stat-starts">0</span></div>
           </div>
         </section>
+
+        <section class="panel-section">
+          <button id="mode-btn" class="big-btn secondary">🔧 エディットモードへ</button>
+        </section>
+
+        <section class="panel-section hidden" id="edit-panel">
+          <div class="tools">
+            <button data-tool="select" class="tool active">☝ 選択</button>
+            <button data-tool="nail" class="tool">📍 釘</button>
+            <button data-tool="wall" class="tool">📏 壁</button>
+            <button data-tool="windmill" class="tool">🌀 風車</button>
+            <button data-tool="pocket-start" class="tool">🎯 スタート</button>
+            <button data-tool="pocket-attacker" class="tool">🎰 アタッカー</button>
+            <button data-tool="pocket-out" class="tool">🕳 アウト</button>
+          </div>
+          <p class="hint">
+            選択ツール: クリックで選択・ドラッグで移動 / 壁ツール: ドラッグで線を引く /
+            変更は「プレイモードへ」で反映
+          </p>
+          <div id="props" class="hidden">
+            <h3 id="prop-title">選択中: -</h3>
+            <label class="prop-row" id="prop-radius-row">
+              半径 <input type="number" id="prop-radius" min="2" max="80" step="0.5" />
+            </label>
+            <label class="prop-row" id="prop-speed-row">
+              回転速度 (rad/s) <input type="number" id="prop-speed" min="-12" max="12" step="0.5" />
+            </label>
+            <label class="prop-row" id="prop-width-row">
+              幅 <input type="number" id="prop-width" min="20" max="300" step="2" />
+            </label>
+            <label class="prop-row" id="prop-role-row">
+              種別
+              <select id="prop-role">
+                <option value="start">スタート</option>
+                <option value="attacker">アタッカー</option>
+                <option value="out">アウト</option>
+              </select>
+            </label>
+            <button id="delete-btn" class="danger">🗑 削除 (Delete)</button>
+          </div>
+          <div class="file-ops">
+            <button id="export-btn">📤 エクスポート</button>
+            <button id="import-btn">📥 インポート</button>
+            <input type="file" id="import-file" accept="application/json" class="hidden" />
+            <button id="reset-btn" class="danger">初期配置に戻す</button>
+          </div>
+        </section>
       </aside>
     </div>
     <script type="module" src="/src/main.ts"></script>

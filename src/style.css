@@ -137,3 +137,82 @@ button.small {
   color: #fff;
   font-weight: bold;
 }
+
+.hidden {
+  display: none !important;
+}
+
+.big-btn.secondary {
+  background: #2a3a5c;
+  border-color: #5f8cff;
+}
+
+.big-btn.secondary:hover {
+  background: #34486f;
+}
+
+.tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+button.tool {
+  font-size: 12px;
+  padding: 6px 8px;
+}
+
+button.tool.active {
+  background: #ff5fa2;
+  color: #24101c;
+  border-color: #ff9dc7;
+}
+
+#props {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: #1c0b16;
+  border: 1px solid #4a2038;
+  border-radius: 8px;
+  padding: 10px;
+}
+
+#props h3 {
+  margin: 0;
+  font-size: 13px;
+  color: #ffd166;
+}
+
+.prop-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  gap: 8px;
+}
+
+.prop-row input,
+.prop-row select {
+  width: 90px;
+  background: #24101c;
+  color: #f5dce8;
+  border: 1px solid #6b2f52;
+  border-radius: 6px;
+  padding: 4px 6px;
+}
+
+button.danger {
+  border-color: #b0413e;
+  color: #ff9d9a;
+}
+
+button.danger:hover {
+  background: #4a1f1e;
+}
+
+.file-ops {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}

@@ -1,10 +1,11 @@
 import './style.css';
 import { Application, Assets, Container, Graphics, Rectangle, Sprite, Texture } from 'pixi.js';
 import { initRapier } from './core/PhysicsWorld';
-import { Game, type LayoutRef } from './core/Game';
+import { Game, type GameMode, type LayoutRef } from './core/Game';
 import { BoardRenderer } from './core/BoardRenderer';
 import { Hud } from './ui/Hud';
-import { createDefaultLayout } from './layout/defaultLayout';
+import { EditorMode } from './editor/EditorMode';
+import { LayoutStore } from './editor/LayoutStore';
 import { BOARD_W, BOARD_H, BALL_R } from './core/constants';
 
 function createBallTexture(app: Application): Texture {
@@ -44,16 +45,54 @@ async function boot(): Promise<void> {
   const ballLayer = new Container();
   app.stage.addChild(ballLayer);
 
-  const layoutRef: LayoutRef = { current: createDefaultLayout() };
+  const store = new LayoutStore();
+  const layoutRef: LayoutRef = { current: store.load() };
   const game = new Game(layoutRef, ballLayer, createBallTexture(app));
-  new Hud(game);
 
   const redraw = () =>
     boardRenderer.redraw(layoutRef.current, {
       editMode: game.mode === 'edit',
-      selectedId: null,
+      selectedId: editor.selected?.id ?? null,
       attackerOpen: false,
     });
+
+  // エディタ。変更のたびに保存(debounce)と再描画を行う
+  let saveTimer: ReturnType<typeof setTimeout> | undefined;
+  const editor = new EditorMode(layoutRef, () => {
+    redraw();
+    hud.showSelected(editor.selected);
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => store.save(layoutRef.current), 400);
+  });
+  editor.attach(app.stage);
+
+  const setMode = (mode: GameMode) => {
+    game.setMode(mode);
+    editor.active = mode === 'edit';
+    if (mode === 'play') store.save(layoutRef.current);
+    hud.applyMode(mode);
+    redraw();
+  };
+
+  const replaceLayout = async (src: 'reset' | File) => {
+    if (src === 'reset') {
+      layoutRef.current = store.reset();
+    } else {
+      const imported = await store.importFile(src);
+      if (!imported) {
+        alert('レイアウトファイルを読み込めませんでした(形式が不正です)');
+        return;
+      }
+      layoutRef.current = imported;
+      store.save(imported);
+    }
+    editor.selected = null;
+    hud.showSelected(null);
+    if (game.mode === 'play') game.rebuildPhysics();
+    redraw();
+  };
+
+  const hud = new Hud({ game, editor, store, layoutRef, setMode, replaceLayout });
   redraw();
 
   app.ticker.add((ticker) => {
@@ -62,7 +101,15 @@ async function boot(): Promise<void> {
   });
 
   // デバッグ・動作検証用
-  (window as unknown as Record<string, unknown>).__fcp = { app, game, layoutRef, redraw };
+  (window as unknown as Record<string, unknown>).__fcp = {
+    app,
+    game,
+    layoutRef,
+    redraw,
+    editor,
+    store,
+    setMode,
+  };
 }
 
 boot();
