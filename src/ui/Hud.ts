@@ -20,6 +20,9 @@ export interface HudContext {
   setMode: (mode: GameMode) => void;
   /** インポート/リセットでレイアウトが差し替わったとき(main が担当) */
   replaceLayout: (json: 'reset' | File) => void;
+  /** エディット中の背景の明るさ(%) */
+  editBrightness: number;
+  setEditBrightness: (percent: number) => void;
 }
 
 const OBJ_LABEL: Record<LayoutObject['type'], string> = {
@@ -47,6 +50,7 @@ export class Hud {
     this.wirePlayControls();
     this.wireAutoPlay();
     this.wireModeToggle();
+    this.wireEditBrightness();
     this.wireEditorTools();
     this.wireProps();
     this.wireFileOps();
@@ -129,6 +133,17 @@ export class Hud {
     this.playPanel.classList.toggle('hidden', editing);
     this.modeBtn.textContent = editing ? '▶ プレイモードへ(変更を反映)' : '🔧 エディットモードへ';
     if (!editing) this.showSelected(null);
+  }
+
+  private wireEditBrightness(): void {
+    const slider = el<HTMLInputElement>('edit-brightness');
+    const label = el<HTMLSpanElement>('brightness-label');
+    slider.value = String(this.ctx.editBrightness);
+    label.textContent = String(this.ctx.editBrightness);
+    slider.addEventListener('input', () => {
+      label.textContent = slider.value;
+      this.ctx.setEditBrightness(Number(slider.value));
+    });
   }
 
   private wireEditorTools(): void {

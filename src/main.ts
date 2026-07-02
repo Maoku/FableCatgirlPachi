@@ -75,12 +75,29 @@ async function boot(): Promise<void> {
   });
   editor.attach(app.stage);
 
+  // エディット中の背景の明るさ(%)。編集対象を見やすくするため暗くできる
+  let editBrightness = Number(localStorage.getItem('fcp-edit-brightness') ?? '50');
+  if (!Number.isFinite(editBrightness) || editBrightness < 10 || editBrightness > 100) {
+    editBrightness = 50;
+  }
+  const applyBgBrightness = () => {
+    const p = game.mode === 'edit' ? editBrightness : 100;
+    const gray = Math.round((255 * p) / 100);
+    bg.tint = (gray << 16) | (gray << 8) | gray;
+  };
+  const setEditBrightness = (percent: number) => {
+    editBrightness = Math.min(100, Math.max(10, percent));
+    localStorage.setItem('fcp-edit-brightness', String(editBrightness));
+    applyBgBrightness();
+  };
+
   const setMode = (mode: GameMode) => {
     if (mode === 'edit') auto.stop('エディットモードへ切替');
     game.setMode(mode);
     editor.active = mode === 'edit';
     if (mode === 'play') store.save(layoutRef.current);
     hud.applyMode(mode);
+    applyBgBrightness();
     redraw();
   };
 
@@ -102,7 +119,17 @@ async function boot(): Promise<void> {
     redraw();
   };
 
-  const hud = new Hud({ game, auto, editor, store, layoutRef, setMode, replaceLayout });
+  const hud = new Hud({
+    game,
+    auto,
+    editor,
+    store,
+    layoutRef,
+    setMode,
+    replaceLayout,
+    editBrightness,
+    setEditBrightness,
+  });
   redraw();
 
   app.ticker.add((ticker) => {
