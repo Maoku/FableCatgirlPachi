@@ -34,8 +34,11 @@ async function boot(): Promise<void> {
   app.stage.eventMode = 'static';
   app.stage.hitArea = new Rectangle(0, 0, BOARD_W, BOARD_H);
 
-  // 背景(パチンコ台の画像)
-  const bgTexture = await Assets.load<Texture>('assets/pachi.png');
+  // 背景(パチンコ台の画像)とキャラクター(大当り演出用)
+  const [bgTexture, charTexture] = await Promise.all([
+    Assets.load<Texture>('assets/pachi.png'),
+    Assets.load<Texture>('assets/character.png'),
+  ]);
   const bg = new Sprite(bgTexture);
   bg.width = BOARD_W;
   bg.height = BOARD_H;
@@ -46,7 +49,7 @@ async function boot(): Promise<void> {
   app.stage.addChild(boardRenderer.container);
   const ballLayer = new Container();
   app.stage.addChild(ballLayer);
-  const fx = new EffectsLayer();
+  const fx = new EffectsLayer(charTexture);
   app.stage.addChild(fx.container);
 
   const store = new LayoutStore();

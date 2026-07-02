@@ -1,4 +1,4 @@
-import { Container, Graphics, Text } from 'pixi.js';
+import { Container, Graphics, Sprite, Text, type Texture } from 'pixi.js';
 
 const REEL_X = 562;
 const REEL_Y = 520;
@@ -22,6 +22,15 @@ interface SpinState {
   onDone: (win: boolean) => void;
 }
 
+const CELEBRATE_TIME = 2.4; // 大当り演出の長さ(秒)
+
+interface Heart {
+  node: Text;
+  vx: number;
+  vy: number;
+  spin: number;
+}
+
 /**
  * 液晶部分の演出(図柄変動リール・リーチ・大当りラウンド表示)。
  * Game が startSpin / setBonusRound を呼び、update(dt) でアニメーションする。
@@ -35,7 +44,14 @@ export class EffectsLayer {
   private spin: SpinState | null = null;
   private lingerT = 0;
 
-  constructor() {
+  // 大当り演出(キャラクター + ハート + バナー)
+  private celebration = new Container();
+  private charSprite: Sprite | null = null;
+  private banner: Text;
+  private hearts: Heart[] = [];
+  private celebrateT = -1; // 負なら停止中
+
+  constructor(characterTexture?: Texture) {
     this.container.eventMode = 'none';
 
     const bg = new Graphics()
@@ -93,6 +109,55 @@ export class EffectsLayer {
 
     this.reelBox.visible = false;
     this.container.addChild(this.reelBox);
+
+    // 大当り演出レイヤ
+    if (characterTexture) {
+      this.charSprite = new Sprite(characterTexture);
+      this.charSprite.anchor.set(0.5);
+      const scale = 500 / characterTexture.height;
+      this.charSprite.scale.set(scale);
+      this.charSprite.position.set(REEL_X, 640);
+      this.celebration.addChild(this.charSprite);
+    }
+    this.banner = new Text({
+      text: 'BONUS!!',
+      style: {
+        fontFamily: 'Arial Black, sans-serif',
+        fontSize: 110,
+        fontWeight: '900',
+        fill: 0xffd166,
+        stroke: { color: 0x8a2a5c, width: 10 },
+      },
+    });
+    this.banner.anchor.set(0.5);
+    this.banner.position.set(REEL_X, 330);
+    this.celebration.addChild(this.banner);
+    this.celebration.visible = false;
+    this.container.addChild(this.celebration);
+  }
+
+  /** 大当り時のお祝い演出を再生する */
+  celebrate(): void {
+    this.celebrateT = 0;
+    this.celebration.visible = true;
+    this.celebration.alpha = 1;
+    for (const h of this.hearts) h.node.destroy();
+    this.hearts = [];
+    for (let i = 0; i < 16; i++) {
+      const node = new Text({
+        text: '💖',
+        style: { fontSize: 28 + Math.random() * 26 },
+      });
+      node.anchor.set(0.5);
+      node.position.set(REEL_X + (Math.random() - 0.5) * 500, 700 + Math.random() * 300);
+      this.hearts.push({
+        node,
+        vx: (Math.random() - 0.5) * 120,
+        vy: -140 - Math.random() * 160,
+        spin: (Math.random() - 0.5) * 4,
+      });
+      this.celebration.addChild(node);
+    }
   }
 
   get spinning(): boolean {
@@ -152,10 +217,49 @@ export class EffectsLayer {
     this.reelBox.visible = false;
     this.reachText.visible = false;
     this.roundText.visible = false;
+    this.celebrateT = -1;
+    this.celebration.visible = false;
+    for (const h of this.hearts) h.node.destroy();
+    this.hearts = [];
+  }
+
+  private updateCelebration(dt: number): void {
+    if (this.celebrateT < 0) return;
+    this.celebrateT += dt;
+    const t = this.celebrateT;
+
+    if (this.charSprite) {
+      // 弾んで登場(オーバーシュート付きイーズ)
+      const k = Math.min(1, t / 0.5);
+      const ease = 1 + (k - 1) ** 3; // easeOutCubic
+      const overshoot = 1 + 0.12 * Math.sin(Math.min(t, 1.2) * 9) * Math.max(0, 1 - t);
+      const base = 500 / this.charSprite.texture.height;
+      this.charSprite.scale.set(base * ease * overshoot);
+      this.charSprite.alpha = k;
+    }
+    this.banner.scale.set(1 + 0.08 * Math.sin(t * 12));
+
+    for (const h of this.hearts) {
+      h.node.x += h.vx * dt;
+      h.node.y += h.vy * dt;
+      h.vy += 40 * dt; // ふわっと減速
+      h.node.rotation += h.spin * dt;
+    }
+
+    // 終盤はフェードアウト
+    const fade = CELEBRATE_TIME - 0.5;
+    if (t > fade) this.celebration.alpha = Math.max(0, 1 - (t - fade) / 0.5);
+    if (t >= CELEBRATE_TIME) {
+      this.celebrateT = -1;
+      this.celebration.visible = false;
+      for (const h of this.hearts) h.node.destroy();
+      this.hearts = [];
+    }
   }
 
   update(dtMs: number): void {
     const dt = dtMs / 1000;
+    this.updateCelebration(dt);
     const s = this.spin;
     if (!s) return;
     s.t += dt;

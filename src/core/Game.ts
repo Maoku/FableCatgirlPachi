@@ -24,7 +24,7 @@ const BONUS_ROUNDS = 10;
 const ROUND_MAX_BALLS = 8; // 1ラウンドの規定入賞数
 const ROUND_TIME = 8; // 1ラウンドの最大時間(秒)
 const ROUND_INTERVAL = 1.2; // ラウンド間のインターバル(秒)
-const BONUS_START_DELAY = 1.0; // 当り表示から開放までの間(秒)
+const BONUS_START_DELAY = 2.6; // 当り演出からアタッカー開放までの間(秒)
 
 interface BonusState {
   round: number;
@@ -156,6 +156,7 @@ export class Game {
     this.fx.startSpin(win, (didWin) => {
       if (didWin) {
         this.stats.wins++;
+        this.fx.celebrate();
         this.bonusStartDelay = BONUS_START_DELAY;
       }
     });
