@@ -11,9 +11,15 @@ body {
   font-family: 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;
 }
 
+body {
+  /* ダブルタップズームを無効化(発射ボタン連打対策)。ピンチズームは維持 */
+  touch-action: manipulation;
+}
+
 #app {
   display: flex;
   height: 100vh;
+  height: 100dvh;
   gap: 12px;
   padding: 12px;
 }
@@ -271,4 +277,53 @@ button.danger:hover {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+}
+
+/* スマホ縦持ち: 盤面を上に大きく、パネルは下にスクロールで */
+@media (max-width: 700px) {
+  html,
+  body {
+    height: auto;
+    min-height: 100%;
+  }
+
+  #app {
+    flex-direction: column;
+    height: auto;
+    min-height: 100dvh;
+    gap: 8px;
+    padding: 8px;
+  }
+
+  #board-wrap {
+    flex: none;
+  }
+
+  #board canvas {
+    /* 幅いっぱいに表示しつつ、パネルの頭が見える高さに抑える */
+    max-width: 100%;
+    max-height: 72dvh;
+  }
+
+  #panel {
+    width: 100%;
+    flex-shrink: 1;
+    overflow-y: visible;
+    padding: 10px;
+  }
+
+  #panel h1 {
+    font-size: 15px;
+    margin-bottom: 6px;
+  }
+
+  .big-btn {
+    padding: 12px 10px;
+    font-size: 14px;
+  }
+
+  .panel-section {
+    padding: 10px 0;
+    gap: 8px;
+  }
 }
