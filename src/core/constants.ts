@@ -14,11 +14,11 @@ export const FIELD_CY = 690;
 export const FIELD_RX = 445;
 export const FIELD_RY = 540;
 
-// 発射レール(外周の内側の円弧)。玉はレールと外周の間の溝を上っていく
+// 発射レール(外周の内側の円弧)。玉はレールと外周の間の溝を左側から上っていく
 export const RAIL_RX = 415;
 export const RAIL_RY = 510;
-export const RAIL_FROM_DEG = -65; // 玉の放出口(右上)
-export const RAIL_TO_DEG = 84; // レール下端(右下)
+export const RAIL_FROM_DEG = 96; // レール下端(左下)
+export const RAIL_TO_DEG = 245; // 玉の放出口(左上)
 
 // 中央液晶(玉が流れない島)の輪郭
 export const DISPLAY_POLY: number[][] = [
@@ -30,9 +30,9 @@ export const DISPLAY_POLY: number[][] = [
   [330, 750],
 ];
 
-// 発射位置(レール溝の下部)と発射方向(溝に沿って右上へ)
-export const LAUNCH_POS = { x: 651, y: 1204 };
-export const LAUNCH_DIR = { x: 0.968, y: -0.251 };
+// 発射位置(レール溝の左下部)と発射方向(溝に沿って左上へ)
+export const LAUNCH_POS = { x: 473, y: 1204 };
+export const LAUNCH_DIR = { x: -0.968, y: -0.251 };
 // レール溝の摩擦・コーナー衝突による減速を織り込んだ実測ベースの値。
 // 強度 0.45 前後で盤面に届き、1.0 で左端までオーバーシュートする
 export const LAUNCH_MIN_V = 13; // m/s
