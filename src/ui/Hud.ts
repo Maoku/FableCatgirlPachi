@@ -59,8 +59,7 @@ export class Hud {
   }
 
   private wireAutoPlay(): void {
-    const btn = el<HTMLButtonElement>('auto-btn');
-    btn.addEventListener('click', () => {
+    const toggle = () => {
       const auto = this.ctx.auto;
       if (auto.active) {
         auto.stop();
@@ -76,7 +75,9 @@ export class Hud {
         ballLimit: useBalls && balls > 0 ? balls : null,
         timeLimitMin: useTime && minutes > 0 ? minutes : null,
       });
-    });
+    };
+    el<HTMLButtonElement>('auto-btn').addEventListener('click', toggle);
+    el<HTMLButtonElement>('q-auto').addEventListener('click', toggle);
   }
 
   private get game(): Game {
@@ -91,14 +92,19 @@ export class Hud {
       powerLabel.textContent = power.value;
     });
 
-    const fireBtn = el<HTMLButtonElement>('fire-btn');
+    // メインの発射ボタンとスマホ用クイックボタンの両方に長押し発射を配線する
+    const fireButtons = [el<HTMLButtonElement>('fire-btn'), el<HTMLButtonElement>('q-fire')];
     const setFiring = (on: boolean) => {
       if (this.game.mode === 'play') this.game.firing = on;
-      fireBtn.classList.toggle('active', on && this.game.mode === 'play');
+      for (const b of fireButtons) {
+        b.classList.toggle('active', on && this.game.mode === 'play');
+      }
     };
-    fireBtn.addEventListener('pointerdown', () => setFiring(true));
-    fireBtn.addEventListener('pointerup', () => setFiring(false));
-    fireBtn.addEventListener('pointerleave', () => setFiring(false));
+    for (const b of fireButtons) {
+      b.addEventListener('pointerdown', () => setFiring(true));
+      b.addEventListener('pointerup', () => setFiring(false));
+      b.addEventListener('pointerleave', () => setFiring(false));
+    }
 
     window.addEventListener('keydown', (e) => {
       if (this.isTypingTarget(e.target)) return;
@@ -121,9 +127,9 @@ export class Hud {
   }
 
   private wireModeToggle(): void {
-    this.modeBtn.addEventListener('click', () => {
-      this.ctx.setMode(this.game.mode === 'play' ? 'edit' : 'play');
-    });
+    const toggle = () => this.ctx.setMode(this.game.mode === 'play' ? 'edit' : 'play');
+    this.modeBtn.addEventListener('click', toggle);
+    el<HTMLButtonElement>('q-mode').addEventListener('click', toggle);
   }
 
   /** モード切替後の表示更新(main の setMode から呼ばれる) */
@@ -132,6 +138,10 @@ export class Hud {
     this.editPanel.classList.toggle('hidden', !editing);
     this.playPanel.classList.toggle('hidden', editing);
     this.modeBtn.textContent = editing ? '▶ プレイモードへ(変更を反映)' : '🔧 エディットモードへ';
+    // クイック操作(スマホ): エディット中は発射・自動を隠し、モードボタンだけ残す
+    el<HTMLButtonElement>('q-fire').classList.toggle('hidden', editing);
+    el<HTMLButtonElement>('q-auto').classList.toggle('hidden', editing);
+    el<HTMLButtonElement>('q-mode').textContent = editing ? '▶ プレイへ(反映)' : '🔧 エディット';
     if (!editing) this.showSelected(null);
   }
 
@@ -247,6 +257,9 @@ export class Hud {
     const btn = el<HTMLButtonElement>('auto-btn');
     btn.textContent = st.active ? '■ 自動プレイ停止' : '▶ 自動プレイ開始';
     btn.classList.toggle('running', st.active);
+    const qAuto = el<HTMLButtonElement>('q-auto');
+    qAuto.textContent = st.active ? '■ 自動停止' : '▶ 自動プレイ';
+    qAuto.classList.toggle('running', st.active);
     const statusEl = el<HTMLElement>('auto-status');
     if (st.active) {
       const m = Math.floor(st.elapsedSec / 60);

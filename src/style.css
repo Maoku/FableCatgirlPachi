@@ -24,6 +24,36 @@ body {
   padding: 12px;
 }
 
+/* 起動中のローディング表示。boot() 完了時に削除される */
+#loading {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #16070f;
+  color: #ff5fa2;
+  font-size: 22px;
+  letter-spacing: 2px;
+  animation: loading-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes loading-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+/* クイック操作(スマホ専用。デスクトップでは非表示) */
+#quick-controls {
+  display: none;
+}
+
 #board-wrap {
   flex: 1;
   display: flex;
@@ -300,9 +330,36 @@ button.danger:hover {
   }
 
   #board canvas {
-    /* 幅いっぱいに表示しつつ、パネルの頭が見える高さに抑える */
+    /* 幅いっぱいに表示しつつ、クイック操作が見える高さに抑える */
     max-width: 100%;
-    max-height: 72dvh;
+    max-height: 66dvh;
+  }
+
+  /* 台のすぐ下に主要ボタンを配置(スクロール不要で操作できるように) */
+  #quick-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .q-row {
+    display: flex;
+    gap: 6px;
+  }
+
+  .q-row button {
+    flex: 1;
+    padding: 10px 8px;
+    font-size: 14px;
+    font-weight: bold;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  #q-auto.running {
+    background: #b0413e;
+    border-color: #ff9d9a;
   }
 
   #panel {

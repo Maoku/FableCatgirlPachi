@@ -145,6 +145,9 @@ async function boot(): Promise<void> {
     if (game.mode === 'play') boardRenderer.updateWindmills(game.physics);
   });
 
+  // 初期化完了。ローディング表示を消す
+  document.getElementById('loading')?.remove();
+
   // デバッグ・動作検証用
   (window as unknown as Record<string, unknown>).__fcp = {
     app,
@@ -159,4 +162,8 @@ async function boot(): Promise<void> {
   };
 }
 
-boot();
+boot().catch((err) => {
+  console.error(err);
+  const loading = document.getElementById('loading');
+  if (loading) loading.textContent = '読み込みに失敗しました。リロードしてください。';
+});
