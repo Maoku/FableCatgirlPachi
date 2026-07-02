@@ -1,57 +1,8 @@
-import type { Layout, LayoutObject } from '../types';
+import type { Layout } from '../types';
 import { createDefaultLayout } from '../layout/defaultLayout';
+import { parseLayout } from '../layout/parseLayout';
 
 const STORAGE_KEY = 'fcp-layout-v1';
-
-function isFiniteNum(v: unknown): v is number {
-  return typeof v === 'number' && Number.isFinite(v);
-}
-
-function validateObject(o: unknown): o is LayoutObject {
-  if (typeof o !== 'object' || o === null) return false;
-  const obj = o as Record<string, unknown>;
-  if (typeof obj.id !== 'string') return false;
-  switch (obj.type) {
-    case 'nail':
-      return isFiniteNum(obj.x) && isFiniteNum(obj.y) && isFiniteNum(obj.radius);
-    case 'wall':
-      return (
-        isFiniteNum(obj.x1) && isFiniteNum(obj.y1) && isFiniteNum(obj.x2) && isFiniteNum(obj.y2)
-      );
-    case 'windmill':
-      return (
-        isFiniteNum(obj.x) && isFiniteNum(obj.y) && isFiniteNum(obj.radius) && isFiniteNum(obj.speed)
-      );
-    case 'pocket':
-      return (
-        isFiniteNum(obj.x) &&
-        isFiniteNum(obj.y) &&
-        isFiniteNum(obj.width) &&
-        ['start', 'attacker', 'out'].includes(obj.role as string)
-      );
-    default:
-      return false;
-  }
-}
-
-/** 未知データを Layout として検証する。壊れていれば null */
-export function parseLayout(json: string): Layout | null {
-  try {
-    const data = JSON.parse(json) as Record<string, unknown>;
-    if (data.version !== 1) return null;
-    const board = data.board as Record<string, unknown> | undefined;
-    if (!board || !isFiniteNum(board.width) || !isFiniteNum(board.height)) return null;
-    if (!Array.isArray(data.objects)) return null;
-    const objects = data.objects.filter(validateObject);
-    return {
-      version: 1,
-      board: { width: board.width, height: board.height },
-      objects,
-    };
-  } catch {
-    return null;
-  }
-}
 
 /** レイアウトの永続化(localStorage)と JSON ファイル入出力 */
 export class LayoutStore {
