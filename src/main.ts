@@ -7,6 +7,7 @@ import { Hud } from './ui/Hud';
 import { EditorMode } from './editor/EditorMode';
 import { LayoutStore } from './editor/LayoutStore';
 import { EffectsLayer } from './fx/EffectsLayer';
+import { LightsLayer } from './fx/LightsLayer';
 import { AutoPlayer } from './game/AutoPlayer';
 import { BOARD_W, BOARD_H, BALL_R } from './core/constants';
 
@@ -44,7 +45,9 @@ async function boot(): Promise<void> {
   bg.height = BOARD_H;
   app.stage.addChild(bg);
 
-  // レイヤ構成: 背景 → オーバーレイ(釘等) → 玉 → 演出
+  // レイヤ構成: 背景 → LED → オーバーレイ(釘等) → 玉 → 演出
+  const lights = new LightsLayer();
+  app.stage.addChild(lights.container);
   const boardRenderer = new BoardRenderer();
   app.stage.addChild(boardRenderer.container);
   const ballLayer = new Container();
@@ -135,6 +138,10 @@ async function boot(): Promise<void> {
   app.ticker.add((ticker) => {
     auto.update(ticker.deltaMS);
     game.update(ticker.deltaMS);
+    // LED はプレイ中のみ(エディット時は盤面を見やすく保つ)
+    lights.container.visible = game.mode === 'play';
+    lights.setExcited(game.bonus !== null);
+    lights.update(ticker.deltaMS);
     if (game.mode === 'play') boardRenderer.updateWindmills(game.physics);
   });
 
@@ -143,6 +150,7 @@ async function boot(): Promise<void> {
     app,
     game,
     auto,
+    lights,
     layoutRef,
     redraw,
     editor,
