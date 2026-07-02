@@ -38,7 +38,7 @@ async function boot(): Promise<void> {
   // 背景(パチンコ台の画像)とキャラクター(大当り演出用)
   const [bgTexture, charTexture] = await Promise.all([
     Assets.load<Texture>('assets/pachi.png'),
-    Assets.load<Texture>('assets/character.png'),
+    Assets.load<Texture>('assets/character.jpg'),
   ]);
   const bg = new Sprite(bgTexture);
   bg.width = BOARD_W;
