@@ -5,6 +5,8 @@ Claude Fable 5 で1枚画像から作ってみる技術検証プロジェクト
 猫耳キャラクターをテーマにした、ブラウザで遊べるパチンコゲーム。
 `Docs/pachi.png` の台画像の上に物理シミュレーションの盤面を重ねて動作します。
 
+公開版: https://maoku.github.io/FableCatgirlPachi/
+
 ![盤面](Docs/pachi.png)
 
 ## 技術スタック
