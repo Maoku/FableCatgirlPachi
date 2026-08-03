@@ -1,4 +1,5 @@
 import { Container, Graphics, Sprite, Text, type Texture } from 'pixi.js';
+import { MoviePlayer } from './MoviePlayer';
 
 const REEL_X = 562;
 const REEL_Y = 520;
@@ -37,6 +38,8 @@ interface Heart {
  */
 export class EffectsLayer {
   readonly container = new Container();
+  /** 演出用動画(リール等の背面でループ再生する) */
+  readonly movie = new MoviePlayer(REEL_X, REEL_Y);
   private reelBox = new Container();
   private digits: Text[] = [];
   private reachText: Text;
@@ -53,6 +56,9 @@ export class EffectsLayer {
 
   constructor(characterTexture?: Texture) {
     this.container.eventMode = 'none';
+
+    // 動画はリール・バナーより背面に置く(当落情報を隠さないため)
+    this.container.addChild(this.movie.view);
 
     const bg = new Graphics()
       .roundRect(REEL_X - 200, REEL_Y - 80, 400, 160, 18)

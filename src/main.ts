@@ -148,11 +148,15 @@ async function boot(): Promise<void> {
   // 初期化完了。ローディング表示を消す
   document.getElementById('loading')?.remove();
 
+  // 演出用動画の先読み(起動はブロックしない)
+  fx.movie.preload();
+
   // デバッグ・動作検証用
   (window as unknown as Record<string, unknown>).__fcp = {
     app,
     game,
     auto,
+    fx,
     lights,
     layoutRef,
     redraw,
