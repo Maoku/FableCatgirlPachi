@@ -24,7 +24,7 @@ interface SpinState {
   onDone: (win: boolean) => void;
 }
 
-const CELEBRATE_TIME = 3.2; // 大当り演出の長さ(秒)。atari 動画(約2.9〜3.2秒)に合わせる
+const CELEBRATE_TIME = 3.4; // 大当り演出の長さ(秒)。atari 動画(約2.7〜3.3秒)に合わせる
 
 interface Heart {
   node: Text;

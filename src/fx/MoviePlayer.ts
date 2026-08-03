@@ -1,11 +1,8 @@
 import { Container, Sprite, Texture, VideoSource } from 'pixi.js';
 import { BOARD_W, BOARD_H } from '../core/constants';
 
-// 素材は 1920×1080 だが実コンテンツは中央の縦長領域(左右は黒帯)。
-// クロップ幅は、盤面全体へ拡大したとき台の各部位が背景 pachi.png と重なるよう
-// SSIM 最大化で較正した値(872×1080 中央切り出し → 1123×1401)
-const CONTENT_W = 872;
-const CONTENT_H = 1080;
+// 素材は 1124×1402 で盤面画像(1123×1401)に合わせてレンダリングされているため、
+// クロップせず全面をそのまま盤面サイズへ表示する(位置合わせは SSIM で確認済み)
 const VIEW_W = BOARD_W;
 const VIEW_H = BOARD_H;
 
@@ -146,7 +143,6 @@ export class MoviePlayer {
     try {
       texture = new Texture({
         source: new VideoSource({ resource: video, autoPlay: false, autoLoad: true }),
-        dynamic: true, // メタデータ確定後に frame(黒帯クロップ)を書き換えるため
       });
     } catch {
       texture = null;
@@ -173,17 +169,6 @@ export class MoviePlayer {
 
   private fit(clip: Clip): void {
     if (!clip.texture) return;
-    // メタデータ確定後(実寸が入ってから)に左右の黒帯を切り落とす
-    const source = clip.texture.source;
-    if (source.width > CONTENT_W && clip.texture.frame.width !== CONTENT_W) {
-      clip.texture.frame.set(
-        (source.width - CONTENT_W) / 2,
-        Math.max(0, (source.height - CONTENT_H) / 2),
-        CONTENT_W,
-        CONTENT_H,
-      );
-      clip.texture.updateUvs();
-    }
     this.sprite.texture = clip.texture;
     this.sprite.setSize(VIEW_W, VIEW_H);
   }
