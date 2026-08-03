@@ -23,6 +23,9 @@ export interface HudContext {
   /** エディット中の背景の明るさ(%) */
   editBrightness: number;
   setEditBrightness: (percent: number) => void;
+  /** 演出動画の音声 ON/OFF(既定はミュート) */
+  soundOn: boolean;
+  setSoundOn: (on: boolean) => void;
 }
 
 const OBJ_LABEL: Record<LayoutObject['type'], string> = {
@@ -49,6 +52,7 @@ export class Hud {
   constructor(private ctx: HudContext) {
     this.wirePlayControls();
     this.wireAutoPlay();
+    this.wireSound();
     this.wireModeToggle();
     this.wireEditBrightness();
     this.wireEditorTools();
@@ -82,6 +86,24 @@ export class Hud {
 
   private get game(): Game {
     return this.ctx.game;
+  }
+
+  private wireSound(): void {
+    const main = el<HTMLButtonElement>('sound-btn');
+    const quick = el<HTMLButtonElement>('q-sound');
+    let on = this.ctx.soundOn;
+    const render = () => {
+      main.textContent = on ? '🔊 音声ON' : '🔇 音声OFF';
+      quick.textContent = on ? '🔊' : '🔇';
+    };
+    const toggle = () => {
+      on = !on;
+      this.ctx.setSoundOn(on);
+      render();
+    };
+    main.addEventListener('click', toggle);
+    quick.addEventListener('click', toggle);
+    render();
   }
 
   private wirePlayControls(): void {

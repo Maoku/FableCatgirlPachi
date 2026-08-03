@@ -122,6 +122,19 @@ async function boot(): Promise<void> {
     redraw();
   };
 
+  // 演出動画の音声 ON/OFF。既定はミュート(自動再生ポリシーでブロックされない形)。
+  // 解除はユーザージェスチャ内でのみ行う(音声アンロック)
+  let soundOn = localStorage.getItem('fcp-sound') === '1';
+  const setSoundOn = (on: boolean) => {
+    soundOn = on;
+    localStorage.setItem('fcp-sound', on ? '1' : '0');
+    fx.movie.setMuted(!on);
+  };
+  window.addEventListener('pointerdown', () => fx.movie.setMuted(!soundOn), {
+    once: true,
+    capture: true,
+  });
+
   const hud = new Hud({
     game,
     auto,
@@ -132,6 +145,8 @@ async function boot(): Promise<void> {
     replaceLayout,
     editBrightness,
     setEditBrightness,
+    soundOn,
+    setSoundOn,
   });
   redraw();
 
