@@ -1,13 +1,12 @@
-import { Container, Graphics, Sprite, Texture, VideoSource } from 'pixi.js';
+import { Container, Sprite, Texture, VideoSource } from 'pixi.js';
+import { BOARD_W, BOARD_H } from '../core/constants';
 
-// 液晶エリアに重ねる表示枠(中心はリールに合わせる)。
-// 素材は 1920×1080 だが実コンテンツは中央の縦長 854×1080(左右は黒帯)のため、
-// 黒帯を切り出した縦長で表示する
+// 素材は 1920×1080 だが実コンテンツは中央の縦長 854×1080(左右は黒帯)。
+// 黒帯を切り出して盤面全体(1123×1401、ほぼ同アスペクト)に重ねて表示する
 const CONTENT_W = 854;
 const CONTENT_H = 1080;
-const VIEW_W = 460;
-const VIEW_H = 580;
-const CORNER = 18;
+const VIEW_W = BOARD_W;
+const VIEW_H = BOARD_H;
 
 const SOURCES = {
   loco: ['assets/movie/loco00.mp4', 'assets/movie/loco01.mp4'],
@@ -28,29 +27,15 @@ interface Clip {
  * (動画がなくても既存演出だけで成立させる)。
  */
 export class MoviePlayer {
-  /** EffectsLayer が最背面に addChild する表示ノード */
+  /** 背景(pachi.png)の直上に addChild する表示ノード(玉・釘・演出の背面) */
   readonly view = new Container();
   private sprite = new Sprite();
   private clips = new Map<string, Clip>();
   private current: Clip | null = null;
   private muted = true;
 
-  constructor(centerX: number, centerY: number) {
-    const x = centerX - VIEW_W / 2;
-    const y = centerY - VIEW_H / 2;
-    this.view.position.set(x, y);
-
-    const mask = new Graphics().roundRect(0, 0, VIEW_W, VIEW_H, CORNER).fill(0xffffff);
-    this.view.addChild(mask);
-    this.sprite.mask = mask;
+  constructor() {
     this.view.addChild(this.sprite);
-
-    // リール枠と揃えた枠線
-    const frame = new Graphics()
-      .roundRect(0, 0, VIEW_W, VIEW_H, CORNER)
-      .stroke({ width: 3, color: 0xff5fa2, alpha: 0.9 });
-    this.view.addChild(frame);
-
     this.view.visible = false;
     this.view.eventMode = 'none';
 

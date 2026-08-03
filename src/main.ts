@@ -45,14 +45,15 @@ async function boot(): Promise<void> {
   bg.height = BOARD_H;
   app.stage.addChild(bg);
 
-  // レイヤ構成: 背景 → LED → オーバーレイ(釘等) → 玉 → 演出
+  // レイヤ構成: 背景 → 演出動画(盤面全体) → LED → オーバーレイ(釘等) → 玉 → 演出
+  const fx = new EffectsLayer(charTexture);
+  app.stage.addChild(fx.movie.view); // 動画は背景の直上(玉・釘・図柄は動画の上に描く)
   const lights = new LightsLayer();
   app.stage.addChild(lights.container);
   const boardRenderer = new BoardRenderer();
   app.stage.addChild(boardRenderer.container);
   const ballLayer = new Container();
   app.stage.addChild(ballLayer);
-  const fx = new EffectsLayer(charTexture);
   app.stage.addChild(fx.container);
 
   const store = new LayoutStore();

@@ -2,7 +2,8 @@ import { Container, Graphics, Sprite, Text, type Texture } from 'pixi.js';
 import { MoviePlayer } from './MoviePlayer';
 
 const REEL_X = 562;
-const REEL_Y = 520;
+// キャラクターの顔(盤面中央 y≈400〜740)に被らない下部に置く
+const REEL_Y = 880;
 const DIGIT_GAP = 120;
 
 // 停止タイミング(秒)。停止順は 左 → 右 → 中
@@ -38,8 +39,8 @@ interface Heart {
  */
 export class EffectsLayer {
   readonly container = new Container();
-  /** 演出用動画(リール等の背面でループ再生する) */
-  readonly movie = new MoviePlayer(REEL_X, REEL_Y);
+  /** 演出用動画(盤面全体に重ねる。view は main が背景直上に addChild する) */
+  readonly movie = new MoviePlayer();
   private reelBox = new Container();
   private digits: Text[] = [];
   private reachText: Text;
@@ -56,9 +57,6 @@ export class EffectsLayer {
 
   constructor(characterTexture?: Texture) {
     this.container.eventMode = 'none';
-
-    // 動画はリール・バナーより背面に置く(当落情報を隠さないため)
-    this.container.addChild(this.movie.view);
 
     const bg = new Graphics()
       .roundRect(REEL_X - 200, REEL_Y - 80, 400, 160, 18)
