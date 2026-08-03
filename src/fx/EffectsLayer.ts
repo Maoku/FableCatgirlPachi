@@ -268,6 +268,7 @@ export class EffectsLayer {
 
   update(dtMs: number): void {
     const dt = dtMs / 1000;
+    this.movie.update(dtMs);
     this.updateCelebration(dt);
     const s = this.spin;
     if (!s) return;

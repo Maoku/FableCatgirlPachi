@@ -8,6 +8,11 @@ const CONTENT_H = 1080;
 const VIEW_W = BOARD_W;
 const VIEW_H = BOARD_H;
 
+// 表示切替はフェード(半透明)で行い、背景画像と自然につなぐ
+const FADE_TIME = 0.4; // 秒
+// 抽選開始(loco)の連続再生を抑制する間隔。前回の再生終了からこの時間は再生しない
+const LOCO_INTERVAL_MS = 5000;
+
 const SOURCES = {
   loco: ['assets/movie/loco00.mp4', 'assets/movie/loco01.mp4'],
   atari: ['assets/movie/atari00.mp4', 'assets/movie/atari01.mp4'],
@@ -16,6 +21,7 @@ const SOURCES = {
 export type MovieKind = keyof typeof SOURCES;
 
 interface Clip {
+  kind: MovieKind;
   video: HTMLVideoElement;
   texture: Texture | null; // テクスチャ生成に失敗したら null(動画なしで進行)
   failed: boolean;
@@ -33,10 +39,13 @@ export class MoviePlayer {
   private clips = new Map<string, Clip>();
   private current: Clip | null = null;
   private muted = true;
+  private targetAlpha = 0;
+  private locoNextAt = 0; // 次に loco を再生してよい時刻(performance.now 基準)
 
   constructor() {
     this.view.addChild(this.sprite);
     this.view.visible = false;
+    this.view.alpha = 0;
     this.view.eventMode = 'none';
 
     // 非表示タブではブラウザがミュート動画を省電力停止するため、復帰時に再開する
@@ -55,13 +64,22 @@ export class MoviePlayer {
     }
   }
 
-  /** 2 本からランダムに選んで先頭から再生・表示。loco はループ、atari は 1 回のみ */
+  /**
+   * 2 本からランダムに選んで先頭から再生し、フェードインで表示する。
+   * loco はループ、atari は 1 回のみ。loco は前回の再生終了から
+   * LOCO_INTERVAL_MS 経つまで再生しない(連続再生の抑制)
+   */
   play(kind: MovieKind): void {
+    if (kind === 'loco' && performance.now() < this.locoNextAt) return;
     const srcs = SOURCES[kind];
     const clip = this.ensureClip(srcs[Math.floor(Math.random() * srcs.length)], kind);
     if (clip.failed || !clip.texture) {
       this.stop();
       return;
+    }
+    if (this.current && this.current !== clip) {
+      this.current.video.pause();
+      this.current.video.currentTime = 0;
     }
     this.current = clip;
     this.fit(clip);
@@ -70,17 +88,39 @@ export class MoviePlayer {
     // 自動再生ブロックや非表示タブで再生できない場合は静止フレームのまま表示を続け、
     // タブ復帰時(visibilitychange)に再開を試みる
     clip.video.play().catch(() => {});
+    this.targetAlpha = 1;
     this.view.visible = true;
   }
 
-  /** 一時停止して非表示(テクスチャ更新も止まり描画負荷を抑える) */
+  /** フェードアウトを開始する。フェード完了時に実停止(pause + 巻き戻し)する */
   stop(): void {
-    if (this.current) {
-      this.current.video.pause();
-      this.current.video.currentTime = 0;
+    if (this.current?.kind === 'loco') {
+      this.locoNextAt = performance.now() + LOCO_INTERVAL_MS;
     }
-    this.current = null;
+    this.targetAlpha = 0;
+    if (this.view.alpha <= 0) this.finishStop();
+  }
+
+  /** フェードの進行。毎フレーム呼ぶ(EffectsLayer.update から) */
+  update(dtMs: number): void {
+    const step = dtMs / 1000 / FADE_TIME;
+    const a = this.view.alpha;
+    if (a < this.targetAlpha) {
+      this.view.alpha = Math.min(this.targetAlpha, a + step);
+    } else if (a > this.targetAlpha) {
+      const next = Math.max(this.targetAlpha, a - step);
+      this.view.alpha = next;
+      // フェードアウト中も再生を続け、消え切ってから実停止する
+      if (next <= 0) this.finishStop();
+    }
+  }
+
+  private finishStop(): void {
     this.view.visible = false;
+    if (!this.current) return;
+    this.current.video.pause();
+    this.current.video.currentTime = 0;
+    this.current = null;
   }
 
   /** ミュート切替。再生中の動画にも即時反映する(ユーザージェスチャ内で呼ぶこと) */
@@ -111,7 +151,7 @@ export class MoviePlayer {
       texture = null;
     }
 
-    clip = { video, texture, failed: texture === null };
+    clip = { kind, video, texture, failed: texture === null };
     this.clips.set(src, clip);
 
     video.addEventListener('error', () => {
