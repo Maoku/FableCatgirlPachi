@@ -1,4 +1,4 @@
-import { Container, Graphics, Sprite, Text, type Texture } from 'pixi.js';
+import { Container, Graphics, Text } from 'pixi.js';
 import { MoviePlayer } from './MoviePlayer';
 
 const REEL_X = 562;
@@ -48,14 +48,13 @@ export class EffectsLayer {
   private spin: SpinState | null = null;
   private lingerT = 0;
 
-  // 大当り演出(キャラクター + ハート + バナー)
+  // 大当り演出(ハート + バナー)
   private celebration = new Container();
-  private charSprite: Sprite | null = null;
   private banner: Text;
   private hearts: Heart[] = [];
   private celebrateT = -1; // 負なら停止中
 
-  constructor(characterTexture?: Texture) {
+  constructor() {
     this.container.eventMode = 'none';
 
     const bg = new Graphics()
@@ -115,14 +114,6 @@ export class EffectsLayer {
     this.container.addChild(this.reelBox);
 
     // 大当り演出レイヤ
-    if (characterTexture) {
-      this.charSprite = new Sprite(characterTexture);
-      this.charSprite.anchor.set(0.5);
-      const scale = 500 / characterTexture.height;
-      this.charSprite.scale.set(scale);
-      this.charSprite.position.set(REEL_X, 640);
-      this.celebration.addChild(this.charSprite);
-    }
     this.banner = new Text({
       text: 'BONUS!!',
       style: {
@@ -235,15 +226,6 @@ export class EffectsLayer {
     this.celebrateT += dt;
     const t = this.celebrateT;
 
-    if (this.charSprite) {
-      // 弾んで登場(オーバーシュート付きイーズ)
-      const k = Math.min(1, t / 0.5);
-      const ease = 1 + (k - 1) ** 3; // easeOutCubic
-      const overshoot = 1 + 0.12 * Math.sin(Math.min(t, 1.2) * 9) * Math.max(0, 1 - t);
-      const base = 500 / this.charSprite.texture.height;
-      this.charSprite.scale.set(base * ease * overshoot);
-      this.charSprite.alpha = k;
-    }
     this.banner.scale.set(1 + 0.08 * Math.sin(t * 12));
 
     for (const h of this.hearts) {

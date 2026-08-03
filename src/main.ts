@@ -35,18 +35,15 @@ async function boot(): Promise<void> {
   app.stage.eventMode = 'static';
   app.stage.hitArea = new Rectangle(0, 0, BOARD_W, BOARD_H);
 
-  // 背景(パチンコ台の画像)とキャラクター(大当り演出用)
-  const [bgTexture, charTexture] = await Promise.all([
-    Assets.load<Texture>('assets/pachi.png'),
-    Assets.load<Texture>('assets/character.jpg'),
-  ]);
+  // 背景(パチンコ台の画像)
+  const bgTexture = await Assets.load<Texture>('assets/pachi.png');
   const bg = new Sprite(bgTexture);
   bg.width = BOARD_W;
   bg.height = BOARD_H;
   app.stage.addChild(bg);
 
   // レイヤ構成: 背景 → 演出動画(盤面全体) → LED → オーバーレイ(釘等) → 玉 → 演出
-  const fx = new EffectsLayer(charTexture);
+  const fx = new EffectsLayer();
   app.stage.addChild(fx.movie.view); // 動画は背景の直上(玉・釘・図柄は動画の上に描く)
   const lights = new LightsLayer();
   app.stage.addChild(lights.container);
