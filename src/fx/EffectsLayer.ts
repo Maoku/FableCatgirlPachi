@@ -23,7 +23,7 @@ interface SpinState {
   onDone: (win: boolean) => void;
 }
 
-const CELEBRATE_TIME = 2.4; // 大当り演出の長さ(秒)
+const CELEBRATE_TIME = 3.2; // 大当り演出の長さ(秒)。atari 動画(約2.9〜3.2秒)に合わせる
 
 interface Heart {
   node: Text;
@@ -144,6 +144,7 @@ export class EffectsLayer {
 
   /** 大当り時のお祝い演出を再生する */
   celebrate(): void {
+    this.movie.play('atari'); // 1回再生。動画の ended で自動停止する
     this.celebrateT = 0;
     this.celebration.visible = true;
     this.celebration.alpha = 1;
@@ -203,6 +204,7 @@ export class EffectsLayer {
     this.reelBox.visible = true;
     this.reachText.visible = false;
     for (const digit of this.digits) digit.style.fill = 0xffffff;
+    this.movie.play('loco'); // 変動のたびにランダムで選び直してループ再生
   }
 
   /** 大当り中のラウンド表示。null で消灯 */
@@ -219,6 +221,7 @@ export class EffectsLayer {
 
   /** 変動を強制終了して非表示(エディットモード遷移時など) */
   reset(): void {
+    this.movie.stop();
     this.spin = null;
     this.reelBox.visible = false;
     this.reachText.visible = false;
@@ -260,6 +263,8 @@ export class EffectsLayer {
       this.celebration.visible = false;
       for (const h of this.hearts) h.node.destroy();
       this.hearts = [];
+      // 通常は動画の ended で停止済み。再生できなかった場合の取り残し対策
+      this.movie.stop();
     }
   }
 
@@ -310,6 +315,7 @@ export class EffectsLayer {
         const { win, onDone } = s;
         this.spin = null;
         if (!this.roundText.visible && !win) this.reelBox.visible = false;
+        this.movie.stop(); // 当落表示の終了で loco を止める(当りなら celebrate が atari を流す)
         onDone(win);
       }
     }
