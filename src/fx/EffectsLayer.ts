@@ -1,7 +1,9 @@
-import { Container, Graphics, Sprite, Text, type Texture } from 'pixi.js';
+import { Container, Graphics, Text } from 'pixi.js';
+import { MoviePlayer } from './MoviePlayer';
 
 const REEL_X = 562;
-const REEL_Y = 520;
+// キャラクターの顔(盤面中央 y≈400〜740)に被らない下部に置く
+const REEL_Y = 880;
 const DIGIT_GAP = 120;
 
 // 停止タイミング(秒)。停止順は 左 → 右 → 中
@@ -22,7 +24,7 @@ interface SpinState {
   onDone: (win: boolean) => void;
 }
 
-const CELEBRATE_TIME = 2.4; // 大当り演出の長さ(秒)
+const CELEBRATE_TIME = 3.4; // 大当り演出の長さ(秒)。atari 動画(約2.7〜3.3秒)に合わせる
 
 interface Heart {
   node: Text;
@@ -37,6 +39,8 @@ interface Heart {
  */
 export class EffectsLayer {
   readonly container = new Container();
+  /** 演出用動画(盤面全体に重ねる。view は main が背景直上に addChild する) */
+  readonly movie = new MoviePlayer();
   private reelBox = new Container();
   private digits: Text[] = [];
   private reachText: Text;
@@ -44,14 +48,13 @@ export class EffectsLayer {
   private spin: SpinState | null = null;
   private lingerT = 0;
 
-  // 大当り演出(キャラクター + ハート + バナー)
+  // 大当り演出(ハート + バナー)
   private celebration = new Container();
-  private charSprite: Sprite | null = null;
   private banner: Text;
   private hearts: Heart[] = [];
   private celebrateT = -1; // 負なら停止中
 
-  constructor(characterTexture?: Texture) {
+  constructor() {
     this.container.eventMode = 'none';
 
     const bg = new Graphics()
@@ -111,14 +114,6 @@ export class EffectsLayer {
     this.container.addChild(this.reelBox);
 
     // 大当り演出レイヤ
-    if (characterTexture) {
-      this.charSprite = new Sprite(characterTexture);
-      this.charSprite.anchor.set(0.5);
-      const scale = 500 / characterTexture.height;
-      this.charSprite.scale.set(scale);
-      this.charSprite.position.set(REEL_X, 640);
-      this.celebration.addChild(this.charSprite);
-    }
     this.banner = new Text({
       text: 'BONUS!!',
       style: {
@@ -138,6 +133,7 @@ export class EffectsLayer {
 
   /** 大当り時のお祝い演出を再生する */
   celebrate(): void {
+    this.movie.play('atari'); // 1回再生。動画の ended で自動停止する
     this.celebrateT = 0;
     this.celebration.visible = true;
     this.celebration.alpha = 1;
@@ -197,6 +193,7 @@ export class EffectsLayer {
     this.reelBox.visible = true;
     this.reachText.visible = false;
     for (const digit of this.digits) digit.style.fill = 0xffffff;
+    this.movie.play('loco'); // 変動のたびにランダムで選び直してループ再生
   }
 
   /** 大当り中のラウンド表示。null で消灯 */
@@ -213,6 +210,7 @@ export class EffectsLayer {
 
   /** 変動を強制終了して非表示(エディットモード遷移時など) */
   reset(): void {
+    this.movie.stop();
     this.spin = null;
     this.reelBox.visible = false;
     this.reachText.visible = false;
@@ -228,15 +226,6 @@ export class EffectsLayer {
     this.celebrateT += dt;
     const t = this.celebrateT;
 
-    if (this.charSprite) {
-      // 弾んで登場(オーバーシュート付きイーズ)
-      const k = Math.min(1, t / 0.5);
-      const ease = 1 + (k - 1) ** 3; // easeOutCubic
-      const overshoot = 1 + 0.12 * Math.sin(Math.min(t, 1.2) * 9) * Math.max(0, 1 - t);
-      const base = 500 / this.charSprite.texture.height;
-      this.charSprite.scale.set(base * ease * overshoot);
-      this.charSprite.alpha = k;
-    }
     this.banner.scale.set(1 + 0.08 * Math.sin(t * 12));
 
     for (const h of this.hearts) {
@@ -254,11 +243,14 @@ export class EffectsLayer {
       this.celebration.visible = false;
       for (const h of this.hearts) h.node.destroy();
       this.hearts = [];
+      // 通常は動画の ended で停止済み。再生できなかった場合の取り残し対策
+      this.movie.stop();
     }
   }
 
   update(dtMs: number): void {
     const dt = dtMs / 1000;
+    this.movie.update(dtMs);
     this.updateCelebration(dt);
     const s = this.spin;
     if (!s) return;
@@ -304,6 +296,7 @@ export class EffectsLayer {
         const { win, onDone } = s;
         this.spin = null;
         if (!this.roundText.visible && !win) this.reelBox.visible = false;
+        this.movie.stop(); // 当落表示の終了で loco を止める(当りなら celebrate が atari を流す)
         onDone(win);
       }
     }

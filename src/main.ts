@@ -35,24 +35,22 @@ async function boot(): Promise<void> {
   app.stage.eventMode = 'static';
   app.stage.hitArea = new Rectangle(0, 0, BOARD_W, BOARD_H);
 
-  // 背景(パチンコ台の画像)とキャラクター(大当り演出用)
-  const [bgTexture, charTexture] = await Promise.all([
-    Assets.load<Texture>('assets/pachi.png'),
-    Assets.load<Texture>('assets/character.jpg'),
-  ]);
+  // 背景(パチンコ台の画像)
+  const bgTexture = await Assets.load<Texture>('assets/pachi.png');
   const bg = new Sprite(bgTexture);
   bg.width = BOARD_W;
   bg.height = BOARD_H;
   app.stage.addChild(bg);
 
-  // レイヤ構成: 背景 → LED → オーバーレイ(釘等) → 玉 → 演出
+  // レイヤ構成: 背景 → 演出動画(盤面全体) → LED → オーバーレイ(釘等) → 玉 → 演出
+  const fx = new EffectsLayer();
+  app.stage.addChild(fx.movie.view); // 動画は背景の直上(玉・釘・図柄は動画の上に描く)
   const lights = new LightsLayer();
   app.stage.addChild(lights.container);
   const boardRenderer = new BoardRenderer();
   app.stage.addChild(boardRenderer.container);
   const ballLayer = new Container();
   app.stage.addChild(ballLayer);
-  const fx = new EffectsLayer(charTexture);
   app.stage.addChild(fx.container);
 
   const store = new LayoutStore();
@@ -122,6 +120,19 @@ async function boot(): Promise<void> {
     redraw();
   };
 
+  // 演出動画の音声 ON/OFF。既定はミュート(自動再生ポリシーでブロックされない形)。
+  // 解除はユーザージェスチャ内でのみ行う(音声アンロック)
+  let soundOn = localStorage.getItem('fcp-sound') === '1';
+  const setSoundOn = (on: boolean) => {
+    soundOn = on;
+    localStorage.setItem('fcp-sound', on ? '1' : '0');
+    fx.movie.setMuted(!on);
+  };
+  window.addEventListener('pointerdown', () => fx.movie.setMuted(!soundOn), {
+    once: true,
+    capture: true,
+  });
+
   const hud = new Hud({
     game,
     auto,
@@ -132,6 +143,8 @@ async function boot(): Promise<void> {
     replaceLayout,
     editBrightness,
     setEditBrightness,
+    soundOn,
+    setSoundOn,
   });
   redraw();
 
@@ -148,11 +161,15 @@ async function boot(): Promise<void> {
   // 初期化完了。ローディング表示を消す
   document.getElementById('loading')?.remove();
 
+  // 演出用動画の先読み(起動はブロックしない)
+  fx.movie.preload();
+
   // デバッグ・動作検証用
   (window as unknown as Record<string, unknown>).__fcp = {
     app,
     game,
     auto,
+    fx,
     lights,
     layoutRef,
     redraw,
