@@ -7,7 +7,7 @@ Claude Fable 5 で1枚画像から作ってみる技術検証プロジェクト
 
 公開版: https://maoku.github.io/FableCatgirlPachi/
 
-![盤面](Docs/pachi.png)
+![盤面](sample.jpg)
 
 ## 技術スタック
 
